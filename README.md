@@ -1,6 +1,6 @@
 # Gemsurf
 
-![demo](demo.gif)
+![demo](https://i.imgur.com/WUhlXMI.gif)
 
 A lightweight TUI Gemini client written in C.
 
