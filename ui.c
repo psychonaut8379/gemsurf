@@ -64,6 +64,9 @@ static void page_load_contents_selection(page_t *page) {
             getmaxyx(stdscr, ymax, xmax);
             if(page->line_index + ymax - 2 < page->contents->lines[i].line_num)
                 page->line_index = page->contents->lines[i].line_num;
+            else if(page->line_index > page->contents->lines[i].line_num) {
+                page->line_index = page->contents->lines[i].line_num;
+            }
 
             page->selected_line = page->contents->lines[i].line;
         } else 
