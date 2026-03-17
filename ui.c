@@ -33,11 +33,13 @@ void page_free(page_t *page) {
 }
 
 static void page_load_contents_view(page_t *page) {
+    int y, x;
+
     for(int i = 0; i < page->contents->line_count; i++) {
+        getyx(page->win, y, x);
+        page->contents->lines[i].line_num = y;
         wprintw(page->win, "%s\n", page->contents->lines[i].line);
     }
-
-    int y, x;
 
     getyx(page->win, y, x);
     page->last_line = y;
@@ -51,17 +53,17 @@ static void page_load_contents_selection(page_t *page) {
 
     int selection_index = 0;
     for(int i = 0; i < page->contents->line_count; i++) {
+        getyx(page->win, y, x);
+        page->contents->lines[i].line_num = y;
+
         if(page->contents->lines[i].line_type == LINK && selection_index == page->selection_index) {
-            getyx(page->win, y, x);
-
-            if(page->line_index + ymax - 2 < y)
-                page->line_index = y;
-            else if(page->line_index > y)
-                page->line_index = y;
-
             wattron(page->win, A_REVERSE);
             wprintw(page->win, "%s\n", page->contents->lines[i].line);
             wattroff(page->win, A_REVERSE);
+
+            getmaxyx(stdscr, ymax, xmax);
+            if(page->line_index + ymax - 2 < page->contents->lines[i].line_num)
+                page->line_index = page->contents->lines[i].line_num;
 
             page->selected_line = page->contents->lines[i].line;
         } else 
@@ -97,32 +99,15 @@ void page_refresh(page_t *page) {
 void set_nearest_selection_index(page_t *page) {
     int link_index = 0;
 
-    for(int i = page->line_index; i < page->contents->link_count; i++) {
-        if(page->contents->lines[i].line_type == LINK) {
-            page->selection_index = i;
+    for(int i = 0; i < page->contents->line_count; i++) {
+        if(page->contents->lines[i].line_type == LINK && page->contents->lines[i].line_num >= page->line_index) {
+            page->selection_index = link_index;
             break;
         }
-    }
 
-    return;
-
-    if(page->selection_index >= page->line_index) 
-        return;
-
-    for(int i = 0; i < page->contents->line_count; i++) {
-        if(page->contents->lines[i].line_type == LINK && link_index >= page->line_index) {
-            page->selection_index = link_index;
-            return;
-        }
-
-        if(page->contents->lines[i].line_type == LINK) 
+        if(page->contents->lines[i].line_type == LINK)
             link_index++;
     }
-
-    if(!link_index)
-        page->selection_index = 0;
-    else
-        page->selection_index = link_index - 1;
 }
 
 static void put_char(char *s, int ch, int index) {
