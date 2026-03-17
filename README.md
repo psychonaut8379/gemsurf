@@ -31,15 +31,15 @@ make
 | q | quit from the program |
 
 ## Roadmap
-- TOFU	
-	Without tofu the program isn't functional yet so i will implement TOFU in first place
-- Preformatted blocks
+- ### TOFU	
+Without tofu the program isn't functional yet so i will implement TOFU in first place
+* ### Preformatted blocks
 Currently Gemsurf doesn't support preformatted blocks. But since this is a core part of the gemtext i will add support as soon as
-- Extended protocol support
+* ### Extended protocol support
 Currently Gemsurf supports only gemini and file protocols but it will be able to handle more protocols via xdg-open (for example Gemsurf asks you to open http link on your default web browser)
-- Improved UI
+* ### Improved UI
 Current UI design is just a temporary placeholder i will improve the UI
-- Folder View
+* ### Folder View
 Gemsurf can only open files currently but it can open folders in future
 
 
