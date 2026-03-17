@@ -29,6 +29,12 @@ char *open_file(const char *file_path) {
     return str;
 }
 
+void open_external_link(const char *url) {
+    char command[1024] = {0};
+    snprintf(command, sizeof(command), "xdg-open '%s' > /dev/null 2>&1 &", url);
+    system(command);
+}
+
 char *fetch_response(connection_handle_t *connection_handle, uri_t *uri) {
     char request[129] = {0};
     int request_len;
@@ -139,7 +145,7 @@ const char *welcome_page_str_backup =   "```_____                               
 
     while(1) {
         if(current_page != first_page) {
-            sprintf(uri_str, "%s://%s%s", current_page->uri->protocol, current_page->uri->hostname, current_page->uri->path);
+            uri_to_str(uri_str, current_page->uri);
             push_msg(&io_win, uri_str);
         }
 
@@ -148,6 +154,11 @@ const char *welcome_page_str_backup =   "```_____                               
         
         int ch = wgetch(io_win.win);
         switch(ch) {
+            case 'a': {
+                const char *opts[] = {"Open", "Exit"};
+                form_window_2_opt("The following link will open externally. Do you confirm?", opts, 9, 50);
+                break;
+            }
             case 'j':
             if(current_page->ui_state == VIEW && current_page->line_index + term_height - 1 < current_page->last_line)
                 current_page->line_index++;
@@ -188,7 +199,7 @@ const char *welcome_page_str_backup =   "```_____                               
             if(current_page->selected_line)
                 selected_uri = parse_link_from_line(current_page->selected_line);               
 
-            if(uri_type(selected_uri) == ABSOLUTE)
+            if(uri_type(selected_uri) == HIERARCHICAL || uri_type(selected_uri) == OPAQUE)
                 uri_parse(buf->uri, selected_uri);
             else
                 uri_parse_relative(buf->uri, selected_uri, current_page->uri);
@@ -214,9 +225,17 @@ const char *welcome_page_str_backup =   "```_____                               
             }
 
             if(strcmp(buf->uri->protocol, "gemini")) {
+
+                const char *opts[] = {"Open", "Exit"};
+                uri_to_str(uri_str, buf->uri);
+                char msg[1024] = {0};
+                strcpy(msg, uri_str);
+                int selection = form_window_2_opt(msg, (const char **)opts, 10, 50);
+                if(selection == 0) {
+                    open_external_link(uri_str);
+                }
+
                 page_free(buf);
-                push_msg(&io_win, "Protocol isn't supported");
-                sleep(1);
 
                 break;
             }
@@ -249,6 +268,7 @@ const char *welcome_page_str_backup =   "```_____                               
             buf = page_new();
 
             uri_normalize_end(io_win.data);
+
             uri_parse(buf->uri, io_win.data);
 
             if(!strcmp(buf->uri->protocol, "file")) {
@@ -271,7 +291,14 @@ const char *welcome_page_str_backup =   "```_____                               
 
             if(strcmp(buf->uri->protocol, "gemini")) {
                 page_free(buf);
-                push_msg(&io_win, "Protocol isn't supported");
+
+                const char *opts[] = {"Open", "Exit"};
+                char msg[1024] = {0};
+                strcpy(msg, io_win.data);
+                int selection = form_window_2_opt(msg, (const char **)opts, 10, 50);
+                if(selection == 0) {
+                    open_external_link(io_win.data);
+                }
 
                 break;
             }

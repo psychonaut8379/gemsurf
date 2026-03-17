@@ -44,4 +44,6 @@ void set_nearest_selection_index(page_t *page);
 void read_user_input(io_win_t *io_win);
 void push_msg(io_win_t *io_win, const char *msg);
 
+int form_window_2_opt(const char *msg, const char **opts, int height, int width);
+
 #endif

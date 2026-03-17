@@ -197,3 +197,61 @@ void push_msg(io_win_t *io_win, const char *msg) {
     waddstr(io_win->win, msg);
     wrefresh(io_win->win);
 }
+
+int form_window_2_opt(const char *msg, const char **opts, int height, int width) {
+    int ymax, xmax;
+
+    getmaxyx(stdscr, ymax, xmax);
+
+    WINDOW *form_win = newwin(height, width, (ymax - height) / 2, (xmax - width) / 2);
+
+
+    int selection_index = 0;
+    int ch;
+    const char *msg_temp;
+    while(1) {
+        msg_temp = msg;
+        wclear(form_win);
+        box(form_win, 0, 0);
+
+        int msg_len = strlen(msg_temp);
+
+        int i = 0;
+        do {
+            mvwaddnstr(form_win, i + 1, 1, msg_temp, width - 2);
+            msg_len = msg_len - width - 2;
+            msg_temp += width - 2;
+            i++;
+        } while(msg_len > 0);
+
+        for(int j = 0; j < 2; j++) {
+            if(selection_index == j) {
+                wattron(form_win, A_REVERSE);
+                mvwprintw(form_win, j + i + 2, 3, "%s", opts[j]);
+                wattroff(form_win, A_REVERSE);
+            } else {
+                mvwprintw(form_win, j + i + 2, 3, "%s", opts[j]);
+            }
+        }
+
+        wrefresh(form_win);
+
+        ch = wgetch(form_win);
+
+        if(ch == 'j' && selection_index < 1) {
+            selection_index++;
+        } else if(ch == 'k' && selection_index > 0) {
+            selection_index--;
+        } else if(ch == 10) {
+            break;
+        } else if(ch == 27) {
+            selection_index = 1;
+            break;
+        }
+    }
+
+    wclear(form_win);
+    wrefresh(form_win);
+    delwin(form_win);
+    return selection_index;
+}

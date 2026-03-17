@@ -8,13 +8,18 @@
 #include "utils.h"
 
 URIType uri_type(char *uri_str) {
-    if(strstr(uri_str, ":"))
-        return ABSOLUTE;
-
     if(uri_str[0] == '/')
         return ROOT_RELATIVE;
 
-    return PATH_RELATIVE;
+    char *protocol = strchr(uri_str, ':');
+
+    if(!protocol || protocol == uri_str)
+        return PATH_RELATIVE;
+
+    if(*(protocol + 1) == '/' && *(protocol + 2) == '/') 
+        return HIERARCHICAL;
+    else 
+        return OPAQUE;
 }
 
 char *parse_link_from_line(char *line) {
@@ -43,6 +48,8 @@ void uri_normalize_end(char *uri_str) {
 } 
 
 void uri_parse(uri_t *uri, char *uri_str) {
+    uri->uri_type = uri_type(uri_str);
+
     char *protocol = strchr(uri_str, ':');
     if(!protocol) {
         protocol = uri_str;
@@ -69,7 +76,8 @@ void uri_parse_relative(uri_t *uri, char *uri_str, uri_t *current_uri) {
         uri->protocol = strdup(current_uri->protocol);
         uri->hostname = strdup(current_uri->hostname);
         uri->path = strdup(uri_str);
-        
+        uri->uri_type = current_uri->uri_type;
+
         return;
     }
 
@@ -79,6 +87,7 @@ void uri_parse_relative(uri_t *uri, char *uri_str, uri_t *current_uri) {
     strcat(path, current_uri->path);
     strcat(path, uri_str);
     uri->path = path;
+    uri->uri_type = current_uri->uri_type;
 }
 
 void uri_free(uri_t *uri) {
@@ -100,6 +109,13 @@ void uri_to_file_path(uri_t *uri, char *dest) {
     snprintf(dest, len, "/%s%s", uri->hostname, uri->path);
 
     dest[len - 2] = '\0';
+}
+
+void uri_to_str(char *dest, uri_t *uri) {
+    if(uri->uri_type == OPAQUE) 
+        sprintf(dest, "%s:%s%s", uri->protocol, uri->hostname, uri->path);
+    else if(uri->uri_type == HIERARCHICAL)
+        sprintf(dest, "%s://%s%s", uri->protocol, uri->hostname, uri->path);
 }
 
 static LineType get_line_type(const char *line) {
