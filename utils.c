@@ -19,17 +19,7 @@ void normalize_newlines(char *s) {
     }
 }
 
-char *next_word(char *s) {
-    while(*s != ' ' && *s != '\t')
-        s++;
-
-    while(*s == ' ' || *s == '\t')
-        s++;
-
-    char *start = s;
-
-    while(*s != ' ' && *s != '\t') 
-        s++;
-
-    return strndup(start, s - start);
+static void skip_whitespaces(char **s) {
+    while(**s == ' ' || **s == '\t')
+        (*s)++;
 }
