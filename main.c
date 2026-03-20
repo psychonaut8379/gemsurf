@@ -52,7 +52,7 @@ char *fetch_response(connection_handle_t *connection_handle, uri_t *uri) {
 
     char *response = connection_receive(connection_handle);
 
-    //connection_wipe(connection_handle);
+    connection_wipe(connection_handle);
 
     return response;
 }
