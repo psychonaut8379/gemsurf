@@ -23,3 +23,18 @@ static void skip_whitespaces(char **s) {
     while(**s == ' ' || **s == '\t')
         (*s)++;
 }
+
+char *next_word(char **s) {
+    char *start = *s;
+
+    while(**s != ' ' && **s != '\t' && **s != '\0')
+        (*s)++;
+
+    if(**s != '\0') {
+        **s = '\0';
+        (*s)++;
+        skip_whitespaces(s);
+    }
+
+    return start;
+}

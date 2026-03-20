@@ -1,9 +1,9 @@
+#include <openssl/sha.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <locale.h>
 #include <ncurses.h>
-#include <s2n.h>
 #include <unistd.h>
 
 #include "network.h"
@@ -45,14 +45,14 @@ char *fetch_response(connection_handle_t *connection_handle, uri_t *uri) {
 
     int status = connection_establish(connection_handle, uri->hostname);
 
-    if(status == S2N_FAILURE)
+    if(status == -1)
         return NULL;
 
     connection_send(connection_handle, request, request_len);
 
     char *response = connection_receive(connection_handle);
 
-    connection_wipe(connection_handle);
+    //connection_wipe(connection_handle);
 
     return response;
 }
@@ -154,11 +154,9 @@ const char *welcome_page_str_backup =   "```_____                               
         
         int ch = wgetch(io_win.win);
         switch(ch) {
-            case 'a': {
-                const char *opts[] = {"Open", "Exit"};
-                form_window_2_opt("The following link will open externally. Do you confirm?", opts, 9, 50);
-                break;
-            }
+            // case 'a':
+            // handle_tofu(current_page->uri->hostname, connection_handle.s2n_connection);
+            // break;
             case 'j':
             if(current_page->ui_state == VIEW && current_page->line_index + term_height - 1 < current_page->last_line)
                 current_page->line_index++;
