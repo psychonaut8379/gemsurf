@@ -1,30 +1,54 @@
 # --- Configuration ---
-# PREFIX determines where the program is installed	
-# Users can override this like: $ make install PREFIX=/usr
+DEBUG ?= 0
 
-PREFIX ?= /usr/local
-BINDIR = $(PREFIX)/bin
+# --- Paths ---
+HOMEDIR = $(HOME)
+
+ifeq ($(DEBUG), 1) 
+	PREFIX = $(shell echo $$PWD)
+endif
+
+PREFIX ?= $(HOMEDIR)/.local
 DATADIR = $(PREFIX)/share/gemsurf
+BINDIR = $(PREFIX)/bin
 
-# --- Compiler and Flags ---
+# --- Compiler Flags and Libraries
+CC = gcc
 CFLAGS = -Wall -Wextra
-LIBS = -ls2n -lncurses
+CFLAGS += -DDATADIR=\"$(DATADIR)\"
+LIBS = -lssl -lcrypto -lncurses
 
-# --- Files ---
+ifeq ($(DEBUG), 1)
+	CFLAGS += -g -fsanitize=address
+endif
+
 TARGET = gemsurf
-SRC = main.c network.c parser.c utils.c ui.c
-OBJ = $(SRC:.c=.o)
+SRCS = main.c network.c parser.c ui.c utils.c
+OBJS = $(SRCS:.c=.o)
 
 # --- Rules ---
+
 all: $(TARGET)
 
-$(TARGET): $(OBJ)
-	cc $(CFLAGS) -o $(TARGET) $(OBJ) $(CFLAGS) $(LIBS)
+$(TARGET): $(OBJS)
+	$(CC) $(OBJS) -o $(TARGET) $(CFLAGS) $(LIBS)
 
 %.o: %.c
-	cc $(CFLAGS) -c $< -o $@
+	$(CC) -c $< -o $@ $(CFLAGS)
 
-run:
-	./gemsurf
+clean:
+	rm -f $(OBJS) $(TARGET)
 
-.PHONY: all run
+install: all
+	mkdir -p $(DATADIR)
+	mkdir -p $(BINDIR)
+	cp $(TARGET) $(BINDIR)
+
+uninstall: 
+	rm -rf $(DATADIR)
+	rm -f $(BINDIR)/$(TARGET)
+
+run: install
+	$(BINDIR)/gemsurf
+
+.PHONY: all clean install uninstall run
