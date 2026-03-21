@@ -23,7 +23,7 @@ ifeq ($(DEBUG), 1)
 endif
 
 TARGET = gemsurf
-SRCS = main.c network.c parser.c ui.c utils.c
+SRCS = main.c network.c parser.c ui.c utils.c tofu.c
 OBJS = $(SRCS:.c=.o)
 
 # --- Rules ---
