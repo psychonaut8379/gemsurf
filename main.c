@@ -1,3 +1,4 @@
+#include <openssl/evp.h>
 #include <openssl/sha.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,6 +9,7 @@
 
 #include "network.h"
 #include "parser.h"
+#include "tofu.h"
 #include "utils.h"
 #include "ui.h"
 
@@ -39,6 +41,8 @@ char *fetch_response(connection_handle_t *connection_handle, uri_t *uri) {
     char request[129] = {0};
     int request_len;
 
+    connection_wipe(connection_handle);
+
     request_len = strlen(uri->protocol) + strlen(uri->hostname) + strlen(uri->path) + 6;
 
     snprintf(request, request_len, "%s://%s%s\r\n", uri->protocol, uri->hostname, uri->path);
@@ -52,7 +56,7 @@ char *fetch_response(connection_handle_t *connection_handle, uri_t *uri) {
 
     char *response = connection_receive(connection_handle);
 
-    connection_wipe(connection_handle);
+    //connection_wipe(connection_handle);
 
     return response;
 }
@@ -62,6 +66,40 @@ void gemini_parse(page_t *page, char *gemtext_str) {
 
     normalize_newlines(page->data);
     gemtext_parse(page->contents, page->data);
+}
+
+int handle_tofu(const char *hostname, connection_handle_t *connection_handle) {
+    char fingerprint[EVP_MAX_MD_SIZE * 2 + 1];
+    read_fingerprint(fingerprint, connection_handle->ssl);
+
+    TrustStatus status = is_host_trusted(hostname, fingerprint);
+
+    if(status == TRUSTED) 
+        return 1;
+
+    if(status == NOT_TRUSTED) {
+        const char *opts[] = {"Trust anyway", "Quit"};
+
+        if(form_window_2_opt("Following host certificate expired or changed", opts, 10, 50) == 0) {
+            add_known_host_entry(hostname, fingerprint);
+            return 1;
+        }
+
+        return 0;
+    }
+
+    if(status == NOT_FOUND) {
+        const char *opts[] = {"Trust", "Quit"};
+        
+        if(form_window_2_opt(hostname, opts, 10, 50) == 0) {
+            add_known_host_entry(hostname, fingerprint);
+            return 1;
+        }
+
+        return 0;
+    }
+
+    return 0;
 }
 
 void clear_forward_pages(page_t *page) {
@@ -143,6 +181,9 @@ const char *welcome_page_str_backup =   "```_____                               
 
     char *response;
 
+    FILE *fp = fopen(DATADIR "/known_hosts", "a");
+    fclose(fp);
+
     while(1) {
         if(current_page != first_page) {
             uri_to_str(uri_str, current_page->uri);
@@ -154,9 +195,10 @@ const char *welcome_page_str_backup =   "```_____                               
         
         int ch = wgetch(io_win.win);
         switch(ch) {
-            // case 'a':
-            // handle_tofu(current_page->uri->hostname, connection_handle.s2n_connection);
-            // break;
+            /* Debugging */
+                    // case 'a':
+                    // handle_tofu(current_page->uri->hostname, &connection_handle);
+                    // break;
             case 'j':
             if(current_page->ui_state == VIEW && current_page->line_index + term_height - 1 < current_page->last_line)
                 current_page->line_index++;
@@ -246,6 +288,14 @@ const char *welcome_page_str_backup =   "```_____                               
                 break;
             }
 
+            // experimental tofu support
+            if(!handle_tofu(buf->uri->hostname, &connection_handle)) {
+                page_free(buf);
+
+                break;
+            }
+            //
+
             gemini_parse(buf, response);
 
             clear_forward_pages(current_page->next_page);
@@ -308,6 +358,14 @@ const char *welcome_page_str_backup =   "```_____                               
 
                 break;
             }
+
+            // experimental tofu support
+            if(!handle_tofu(buf->uri->hostname, &connection_handle)) {
+                page_free(buf);
+
+                break;
+            }
+            //
 
             gemini_parse(buf, response);
 

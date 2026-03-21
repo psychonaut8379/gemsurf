@@ -139,8 +139,10 @@ int connection_initialize(connection_handle_t *connection_handle) {
 }
 
 void connection_wipe(connection_handle_t *connection_handle) {
-    SSL_free(connection_handle->ssl);
-    connection_handle->ssl = NULL;
+    if(connection_handle->ssl) {
+        SSL_free(connection_handle->ssl);
+        connection_handle->ssl = NULL;
+    }
 }
 
 void connection_cleanup(connection_handle_t *connection_handle) {
@@ -172,48 +174,6 @@ int connection_establish(connection_handle_t *connection_handle, const char *hos
     failure:
     SSL_free(connection_handle->ssl);
     return -1;
-
-    // s2n_blocked_status blocked;
-
-    // int socket_fd = socket_connect(hostname);
-
-    // if(socket_fd < 0)
-    //     return -1; 
-
-    // connection_handle->socket_fd = socket_fd;
-
-    // s2n_connection_set_fd(connection_handle->s2n_connection, connection_handle->socket_fd);
-    // s2n_set_server_name(connection_handle->s2n_connection, hostname);
-    // s2n_connection_set_config(connection_handle->s2n_connection, connection_handle->s2n_config);
-
-    // s2n_negotiate(connection_handle->s2n_connection, &blocked);
-    // const char *err = s2n_strerror(s2n_errno, "EN"); 
-
-    // const int MAX_ATTEMPTS = 5000;
-    // int attempts = 0;
-    // int res;
-    // do {
-    //     res = s2n_negotiate(connection_handle->s2n_connection, &blocked);
-
-    //     if(res != S2N_SUCCESS) {
-    //         if(s2n_error_get_type(s2n_errno) != S2N_ERR_T_BLOCKED) {
-    //             close(socket_fd);
-    //             return S2N_FAILURE;
-    //         }
-    //     }
-
-    //     attempts++;
-
-    //     if(attempts >= MAX_ATTEMPTS) {
-    //         close(socket_fd);
-    //         return 1;
-    //     }
-    // } while(res != S2N_SUCCESS);
-
-    // int final_flags = fcntl(socket_fd, F_GETFL, 0);
-    // fcntl(socket_fd, F_SETFL, final_flags & ~O_NONBLOCK);
-
-    // return res;
 }
 
 int connection_send(connection_handle_t *connection_handle, const char *request, ssize_t request_len) {
