@@ -6,8 +6,8 @@ A lightweight TUI Gemini client written in C.
 
 ## Prerequisites 
 
-- c compiler
-- s2n-tls 
+- C compiler
+- OpenSSL
 - ncurses
 
 ## Installation 
