@@ -14,8 +14,8 @@ A lightweight TUI Gemini client written in C.
 
 ```
 git clone https://github.com/psychonaut8379/Gemsurf.git
-make
-./gemsurf
+make && make install
+gemsurf
 ```
 
 ## Controls
