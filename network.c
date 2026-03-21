@@ -132,6 +132,9 @@ int connection_initialize(connection_handle_t *connection_handle) {
     SSL_CTX_set_min_proto_version(ssl_ctx, TLS1_2_VERSION);
 
     connection_handle->ssl_ctx = ssl_ctx;
+
+    connection_handle->ssl = NULL;
+
     return 0; // ?
 }
 
