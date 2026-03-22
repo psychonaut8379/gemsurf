@@ -34,7 +34,7 @@ gemsurf
 
 ## Roadmap
 - [x] **TOFU** - Gemsurf supports TOFU model experimentally
-- [ ] **Preformatted blocks** - Currently Gemsurf doesn't support preformatted blocks. But since this is a core part of the gemtext i will add support as soon as
+- [x] **Preformatted blocks** - preformatted lines should not get formatted at all, they should not wrap to new lines. so normally this behaviour can be achieved with horizontal scrollbars. but implementing this would be extremely hard on terminal environment so currently gemsurf just cuts the line if it is wider than the screen
 - [x] **Extended protocol support** - From now on gemsurf prompts for comfirmation to open link in external app if it can't handle url
 - [ ] **Improved UI** - Current UI design is just a temporary placeholder i will improve the UI
 - [ ] **Folder View** - Gemsurf can only open files currently but it can open folders in future
