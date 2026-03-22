@@ -32,13 +32,23 @@ void page_free(page_t *page) {
     free(page);
 }
 
+static void page_load_line(WINDOW *win, const gemtext_line_t *line) {
+    int x = getmaxx(stdscr);
+
+    if(line->line_type == PREFORMATTED) {
+        wprintw(win, "%.*s\n", x, line->line);
+    } else {
+        wprintw(win, "%s\n", line->line);
+    }
+}
+
 static void page_load_contents_view(page_t *page) {
     int y, x;
 
     for(int i = 0; i < page->contents->line_count; i++) {
         getyx(page->win, y, x);
         page->contents->lines[i].line_num = y;
-        wprintw(page->win, "%s\n", page->contents->lines[i].line);
+        page_load_line(page->win, &page->contents->lines[i]);
     }
 
     getyx(page->win, y, x);
@@ -70,8 +80,8 @@ static void page_load_contents_selection(page_t *page) {
 
             page->selected_line = page->contents->lines[i].line;
         } else 
-            wprintw(page->win, "%s\n", page->contents->lines[i].line);
-            
+            page_load_line(page->win, &page->contents->lines[i]);
+
         if(page->contents->lines[i].line_type == LINK) 
             selection_index++;           
     }
